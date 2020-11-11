@@ -27,13 +27,15 @@ $router->group(['prefix' => 'member'], function () use ($router) {
 
     # Verification
     $router->post('/request_email_verification', 'Member\AccountController@request_email_verification');
+
+    # Update Account Data
     $router->post('/change_email_address', 'Member\AccountController@change_email_address');
 
     # Microservice
     // TODO Send Email INQUIRY From email_outbox
 
     # Open
-    // TODO Verify email address from Email Link
+    $router->post('/verify_email_address', 'Member\AccountController@verify_email_address');
 });
 
 $router->get('/key', 'ExampleController@generateKey');

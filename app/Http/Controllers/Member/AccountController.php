@@ -13,9 +13,14 @@ class AccountController extends Controller
     public function __construct()
     {
         $this->middleware('auth', [
-            'only' => [
-                'request_email_verification',
-                'change_email_address',
+            'except' => [
+                'verify_email_address',
+            ],
+        ]);
+
+        $this->middleware('account_check', [
+            'except' => [
+                'verify_email_address',
             ],
         ]);
     }
@@ -214,6 +219,7 @@ class AccountController extends Controller
                 $affected = DB::table('member')
                     ->where('id', $member_id)
                     ->update([
+                        'account_status' => 'ACTIVE',
                         'email_address' => $email_address,
                         'email_address_verify_status' => 'NOT VERIFIED',
                         'updated_at' => date('Y-m-d H:i:s'),
@@ -234,6 +240,142 @@ class AccountController extends Controller
                 $respMessage = trans('messages.ChangeCannotBeDone');
                 return $this->respondFailedWithMessage($respMessage);
             }
+        }
+
+        $respMessage = trans('messages.Error');
+        return $this->respondFailedWithMessage($respMessage);
+    }
+
+    public function verify_email_address(Request $request)
+    {
+        # Request BODY validation
+        $validationRules =  [
+            'email_address' => 'required|email|max:100',
+            'key_token' => 'required',
+        ];
+        $errors = $this->staticValidation($request->all(), $validationRules);
+        if (count($errors) > 0) {
+            $respMessage = $errors->first();
+            return $this->respondWithMissingField($respMessage);
+        };
+
+        # Variable initialization
+        $email_address = strtolower($request->input('email_address'));
+
+        DB::beginTransaction();
+        try {
+            # Set Key EXPIRED with passed "expired_time"
+            DB::table('key_user')
+                ->where([
+                    'type' => 'VERIFYEMAILADDRESS',
+                    'status' => 'ACTIVE',
+                ])
+                ->where('expired_time', '<', date('Y-m-d H:i:s'))
+                ->update([
+                    'status' => 'EXPIRED',
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+
+
+            # Select table key_user
+            $key_user = DB::table('key_user')
+                ->where([
+                    'type' => 'VERIFYEMAILADDRESS',
+                    'value' => $request->input('key_token'),
+                ]);
+
+            if ($key_user->get()->count() == 0) {
+                DB::rollback();
+                $respMessage = trans('messages.KeyTokenNotFound');
+                return $this->respondFailedWithMessage($respMessage);
+            } else if ($key_user->get()->count() > 1) {
+                DB::rollback();
+                $respMessage = trans('messages.KeyTokenRegisteredMoreThanOnce');
+                return $this->respondFailedWithMessage($respMessage);
+            }
+
+            # Object "key_user" with all column selected
+            $key_user = $key_user->first();
+
+            # Check status value key_user
+            if ($key_user->status == 'USED') {
+                DB::rollback();
+                $respMessage = trans('messages.KeyTokenAlreadyUsed');
+                return $this->respondFailedWithMessage($respMessage);
+            } else if ($key_user->status == 'EXPIRED') {
+                DB::rollback();
+                $respMessage = trans('messages.KeyTokenExpired');
+                return $this->respondFailedWithMessage($respMessage);
+            }
+
+            # Select table member
+            $member = DB::table('member')
+                ->where([
+                    'email_address' => $email_address,
+                ]);
+
+            if ($member->get()->count() == 0) {
+                DB::rollback();
+                $respMessage = trans('messages.MemberAccountNotFound');
+                return $this->respondFailedWithMessage($respMessage);
+            } else if ($member->get()->count() > 1) {
+                DB::rollback();
+                $respMessage = trans('messages.MemberRegisteredMoreThanOnce');
+                return $this->respondFailedWithMessage($respMessage);
+            }
+
+            # Object "member" with all column selected
+            $member = $member->first();
+
+            # Check if email_address match key_token
+            if ($member->code != $key_user->code) {
+                DB::rollback();
+                $respMessage = trans('messages.KeyTokenAndEmailAddressDidNotMatch');
+                return $this->respondFailedWithMessage($respMessage);
+            }
+
+            # Check if email_address already verified
+            if ($member->email_address_verify_status == 'VERIFIED') {
+                DB::rollback();
+                $respMessage = trans('messages.EmailStatusAlreadyVerified');
+                return $this->respondFailedWithMessage($respMessage);
+            }
+
+            # Update member: set email_address_verify_status to "VERIFIED"
+            $affected = DB::table('member')
+                ->where('id', $member->id)
+                ->update([
+                    'email_address_verify_status' => 'VERIFIED',
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+            if ($affected != 1) {
+                DB::rollback();
+                $respMessage = trans('messages.UpdateDataFailed');
+                return $this->respondFailedWithMessage($respMessage);
+            }
+
+            # Update key_user: set status to "USED"
+            $affected = DB::table('key_user')
+                ->where('id', $key_user->id)
+                ->update([
+                    'status' => 'USED',
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+            if ($affected != 1) {
+                DB::rollback();
+                $respMessage = trans('messages.UpdateDataFailed');
+                return $this->respondFailedWithMessage($respMessage);
+            }
+
+            DB::commit();
+            $respMessage = trans('messages.ProccessSuccess');
+            return $this->respondSuccessWithMessageAndData($respMessage);
+        } catch (\Exception $e) {
+            $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e);
+
+            DB::rollback();
+            $respMessage = trans('messages.ChangeCannotBeDone');
+            return $this->respondFailedWithMessage($respMessage);
         }
 
         $respMessage = trans('messages.Error');

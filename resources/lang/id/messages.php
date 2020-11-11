@@ -22,4 +22,9 @@ return [
     'EmailStatusAlreadyVerified' => 'Status email sudah terverifikasi',
     'RequestEmailAlreadySavedPleaseWait' => 'Permintaan email sudah tersimpan, mohon untuk menunggu',
     'RequestEmailAlreadySavedPleaseCheck' => 'Permintaan email sudah tersimpan, mohon cek email anda',
+    'KeyTokenNotFound' => 'Key Token tidak ditemukan',
+    'KeyTokenRegisteredMoreThanOnce' => 'Key Token tercatat lebih dari sekali, silahkan kontak admin',
+    'KeyTokenAlreadyUsed' => 'Key Token sudah digunakan',
+    'KeyTokenExpired' => 'Key Token sudah kedaluwarsa',
+    'KeyTokenAndEmailAddressDidNotMatch' => 'Key Token dan alamat email tidak sesuai',
 ];
