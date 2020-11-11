@@ -84,6 +84,7 @@ $app->configure('app');
 $app->routeMiddleware([
     'auth' => App\Http\Middleware\Authenticate::class,
     'age' => App\Http\Middleware\Age::class,
+    'account_check' => App\Http\Middleware\AccountCheck::class,
 ]);
 
 /*

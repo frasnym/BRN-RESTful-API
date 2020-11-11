@@ -17,6 +17,7 @@ return [
     'StatusNotIdentified' => 'Status tidak teridentifikasi',
     'MemberAccountNotFound' => 'Akun anggota tidak ditemukan',
     'MemberRegisteredMoreThanOnce' => 'Akun anggota terdaftar lebih dari sekali, silahkan kontak admin',
+    'MemberAccountInactive' => 'Akun anggota tidak aktif, silahkan kontak admin',
     'InvalidAccountPassword' => 'Password akun salah',
     'EmailStatusAlreadyVerified' => 'Status email sudah terverifikasi',
     'RequestEmailAlreadySavedPleaseWait' => 'Permintaan email sudah tersimpan, mohon untuk menunggu',

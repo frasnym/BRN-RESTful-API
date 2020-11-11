@@ -18,6 +18,12 @@ class AuthController extends Controller
                 'logout',
             ],
         ]);
+
+        $this->middleware('account_check', [
+            'only' => [
+                'logout',
+            ],
+        ]);
     }
 
     public function register(Request $request)
@@ -216,7 +222,7 @@ class AuthController extends Controller
                     $respMessage = trans('messages.UpdateDataFailed');
                     return $this->respondFailedWithMessage($respMessage);
                 } else {
-                    DB::commit();
+                    DB::rollback();
                     $respMessage = trans('messages.ProccessSuccess');
                     return $this->respondSuccessWithMessageAndData($respMessage);
                 }
