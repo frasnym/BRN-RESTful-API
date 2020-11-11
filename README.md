@@ -11,6 +11,19 @@ Laravel Lumen is a stunningly fast PHP micro-framework for building web applicat
 | [Lumen](https://lumen.laravel.com/) | 8.2.0 |
 | [PostgreSQL](https://www.postgresql.org/) | 13.0 |
 
+## Features
+
+<ol>
+    <li>Register Member</li>
+    <li>Login Member. Return "api_token" used for accessing API</li>
+    <li>Logout Member. Delete "api_token" for corresponding member</li>
+    <li>Middleware Auth. Checking api_token before accessing API</li>
+    <li>Middleware Account Status. Checking account status before accessing API</li>
+    <li>Request Email Verification. Save token which expired in specific time and make queue for email gateway</li>
+    <li>Change Email Address. Change email address if registered email is mistyped</li>
+    <li>Verify Email Address. Check suitability between email address and token key</li>
+</ol>
+
 ### Installing
 <ol>
     <li>
