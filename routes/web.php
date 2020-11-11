@@ -27,7 +27,7 @@ $router->group(['prefix' => 'member'], function () use ($router) {
 
     # Verification
     $router->post('/request_email_verification', 'Member\AccountController@request_email_verification');
-    // TODO Change Email set STATUS back to NOT VERIFIED
+    $router->post('/change_email_address', 'Member\AccountController@change_email_address');
 
     # Microservice
     // TODO Send Email INQUIRY From email_outbox

@@ -15,6 +15,7 @@ class AccountController extends Controller
         $this->middleware('auth', [
             'only' => [
                 'request_email_verification',
+                'change_email_address',
             ],
         ]);
     }
@@ -145,10 +146,10 @@ class AccountController extends Controller
 
                 # Minified html of email body
                 $body = "<!DOCTYPE html><html lang='en'><body style=' background-color: #fff; margin: 40px; font: 13px/20px normal Helvetica, Arial, sans-serif; color: #4F5155; '><div style='margin: 0 200px; border: 1px solid #D0D0D0; box-shadow: 0 0 8px #D0D0D0;'><h1 style='color: #444; background-color: transparent; font-size: 30px; font-weight: 600; margin: 0 0 14px 0; padding: 14px 15px 10px 15px;'>BRN: Verify your email address</h1><div style='width: 300px; height: 15px; background: #007bff; margin: 0 15px;'></div><div style='margin: 0 15px 0 15px;'><p>Please click this button below to verify your email address</p> <a style='display: inline-block; font-weight: 400; text-align: center; white-space: nowrap; vertical-align: middle; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; border: 1px solid transparent; padding: .375rem .75rem; font-size: 1rem; line-height: 1.5; border-radius: .25rem; cursor: pointer; color: #fff; background-color: #007bff; border-color: #007bff; text-decoration: none;' target='_blank' href='[VERIFICATION_LINK]'>Verify Email Address</a><p>If the button didn't work, you can follow this link:</p> <a style='color: #003399; background-color: transparent; font-weight: normal;' target='_blank' href='[VERIFICATION_LINK]'>[VERIFICATION_LINK]</a><p>Regards,</p><p>BRN Teams</p></div><p style='text-align: right; font-size: 11px; border-top: 1px solid #D0D0D0; line-height: 32px; padding: 0 10px 0 10px; margin: 20px 0 0 0;'> Copyright &copy; 2018 BRN.com</p></div></body></html>";
-                    
+
                 # Insert verification link to body
                 $verification_link = "localhost:2020?key=$key_verification&email=$member->email_address";
-                $body = str_replace('[VERIFICATION_LINK]',$verification_link,$body);
+                $body = str_replace('[VERIFICATION_LINK]', $verification_link, $body);
 
                 # Insert to email_outbox
                 $valueDB = [
@@ -164,6 +165,68 @@ class AccountController extends Controller
                 DB::commit();
                 $respMessage = trans('messages.RequestEmailAlreadySavedPleaseCheck');
                 return $this->respondSuccessWithMessageAndData($respMessage);
+            } catch (\Exception $e) {
+                $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e);
+
+                DB::rollback();
+                $respMessage = trans('messages.ChangeCannotBeDone');
+                return $this->respondFailedWithMessage($respMessage);
+            }
+        }
+
+        $respMessage = trans('messages.Error');
+        return $this->respondFailedWithMessage($respMessage);
+    }
+
+    public function change_email_address(Request $request)
+    {
+        # Request BODY validation
+        $validationRules =  [
+            'email_address' => 'required|email|max:100',
+        ];
+        $errors = $this->staticValidation($request->all(), $validationRules);
+        if (count($errors) > 0) {
+            $respMessage = $errors->first();
+            return $this->respondWithMissingField($respMessage);
+        };
+
+        $idToken = $request->header('Authorization');
+        $idToken = explode(' ', $idToken);
+
+        # Check Token is 3: 1 is "Token" word, 2 is userID, 3 is the Token 
+        if (count($idToken) == 3) {
+            DB::beginTransaction();
+            try {
+                $member_id = $idToken[1];
+                $email_address = strtolower($request->input('email_address'));
+
+                # Check email_address if used by other account
+                $check_member = DB::table('member')
+                    ->where('email_address', $email_address)
+                    ->where('id', '!=', $member_id);
+                if ($check_member->get()->count() > 0) {
+                    DB::rollback();
+                    $respMessage = trans('messages.EmailAddressAlreadyRegistered');
+                    return $this->respondFailedWithMessage($respMessage);
+                }
+
+                # Update email_address and set email_address_verify_status to "NOT VERIFIED"
+                $affected = DB::table('member')
+                    ->where('id', $member_id)
+                    ->update([
+                        'email_address' => $email_address,
+                        'email_address_verify_status' => 'NOT VERIFIED',
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ]);
+                if ($affected != 1) {
+                    DB::rollback();
+                    $respMessage = trans('messages.UpdateDataFailed');
+                    return $this->respondFailedWithMessage($respMessage);
+                } else {
+                    DB::commit();
+                    $respMessage = trans('messages.ProccessSuccess');
+                    return $this->respondSuccessWithMessageAndData($respMessage);
+                }
             } catch (\Exception $e) {
                 $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e);
 
