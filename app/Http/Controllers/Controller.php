@@ -128,4 +128,23 @@ class Controller extends BaseController
             'message' => $message,
         ], 400);
     }
+
+    /**
+     * @param $message
+     * @param $data
+     * @return Response
+     */
+    protected function respondFailedWithMessageAndData($message, $data = null)
+    {
+        $response = [
+            'success' => true,
+            'message' => $message,
+        ];
+        $data ? $response['data'] = $data : null;
+
+        return response()->json(
+            $response,
+            400
+        );
+    }
 }

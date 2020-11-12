@@ -31,11 +31,13 @@ $router->group(['prefix' => 'member'], function () use ($router) {
     # Update Account Data
     $router->post('/change_email_address', 'Member\AccountController@change_email_address');
 
-    # Microservice
-    // TODO Send Email INQUIRY From email_outbox
-
     # Open
     $router->post('/verify_email_address', 'Member\AccountController@verify_email_address');
+});
+
+$router->group(['prefix' => 'microservices'], function () use ($router) {
+    # Email
+    $router->get('/send_inquiry_email', 'Microservices\EmailController@send_inquiry_email');
 });
 
 $router->get('/key', 'ExampleController@generateKey');
