@@ -171,7 +171,7 @@ class AccountController extends Controller
                 $respMessage = trans('messages.RequestEmailAlreadySavedPleaseCheck');
                 return $this->respondSuccessWithMessageAndData($respMessage);
             } catch (\Exception $e) {
-                $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e);
+                $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e->getMessage());
 
                 DB::rollback();
                 $respMessage = trans('messages.ChangeCannotBeDone');
@@ -234,7 +234,7 @@ class AccountController extends Controller
                     return $this->respondSuccessWithMessageAndData($respMessage);
                 }
             } catch (\Exception $e) {
-                $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e);
+                $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e->getMessage());
 
                 DB::rollback();
                 $respMessage = trans('messages.ChangeCannotBeDone');
@@ -371,7 +371,7 @@ class AccountController extends Controller
             $respMessage = trans('messages.ProccessSuccess');
             return $this->respondSuccessWithMessageAndData($respMessage);
         } catch (\Exception $e) {
-            $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e);
+            $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e->getMessage());
 
             DB::rollback();
             $respMessage = trans('messages.ChangeCannotBeDone');

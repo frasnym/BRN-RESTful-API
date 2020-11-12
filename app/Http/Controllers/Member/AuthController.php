@@ -118,7 +118,7 @@ class AuthController extends Controller
                 }
             }
         } catch (\Exception $e) {
-            $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e);
+            $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e->getMessage());
 
             DB::rollback();
             $respMessage = trans('messages.ChangeCannotBeDone');
@@ -191,7 +191,7 @@ class AuthController extends Controller
                 return $this->respondSuccessWithMessageAndData($respMessage, $respData);
             }
         } catch (\Exception $e) {
-            $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e);
+            $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e->getMessage());
 
             DB::rollback();
             $respMessage = trans('messages.ChangeCannotBeDone');
@@ -227,7 +227,7 @@ class AuthController extends Controller
                     return $this->respondSuccessWithMessageAndData($respMessage);
                 }
             } catch (\Exception $e) {
-                $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e);
+                $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e->getMessage());
 
                 DB::rollback();
                 $respMessage = trans('messages.ChangeCannotBeDone');
