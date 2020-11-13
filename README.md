@@ -24,6 +24,7 @@ Laravel Lumen is a stunningly fast PHP micro-framework for building web applicat
     <li>Verify Email Address. Check suitability between email address and token key</li>
     <li>Send a HTML Email with <b>illuminate/mail</b> package</li>
     <li>Request Phone Verification. Save code which expired in specific time and make queue for sms gateway</li>
+    <li>Send a SMS with <b><a href="http://dutasms.com/">DutaSMS</a></b></li>
 </ol>
 
 ### Installing

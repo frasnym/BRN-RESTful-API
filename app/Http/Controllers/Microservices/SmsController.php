@@ -41,10 +41,10 @@ class SmsController extends Controller
                     $headers = [];
                     $body = [];
 
-                    # DutaSMS Trial
+                    # DutaSMS
                     $message = $value->message;
-                    $user = "sms";
-                    $password = "123456";
+                    $user = env('DUTASMS_USER');
+                    $password = env('DUTASMS_PASSWORD');
                     $auth = MD5($user . $password . $value->recipient);
                     $message = urlencode($message);
                     $url .= "?username=" . $user . "&mobile=" . $value->recipient . "&message=" . $message . "&auth=" . $auth;
