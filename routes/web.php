@@ -27,9 +27,12 @@ $router->group(['prefix' => 'member'], function () use ($router) {
 
     # Verification
     $router->post('/request_email_verification', 'Member\AccountController@request_email_verification');
+    $router->post('/request_phone_verification', 'Member\AccountController@request_phone_verification');
+    // TODO Phone Number Verification DutaSMS
 
     # Update Account Data
     $router->post('/change_email_address', 'Member\AccountController@change_email_address');
+    // TODO Phone Number Verification DutaSMS
 
     # Open
     $router->post('/verify_email_address', 'Member\AccountController@verify_email_address');
@@ -38,6 +41,9 @@ $router->group(['prefix' => 'member'], function () use ($router) {
 $router->group(['prefix' => 'microservices'], function () use ($router) {
     # Email
     $router->get('/send_inquiry_email', 'Microservices\EmailController@send_inquiry_email');
+
+    # Phone
+    // TODO Phone Number Verification DutaSMS
 });
 
 $router->get('/key', 'ExampleController@generateKey');

@@ -15,12 +15,14 @@ class AccountController extends Controller
         $this->middleware('auth', [
             'except' => [
                 'verify_email_address',
+                'request_phone_verification',
             ],
         ]);
 
         $this->middleware('account_check', [
             'except' => [
                 'verify_email_address',
+                'request_phone_verification',
             ],
         ]);
     }
@@ -376,6 +378,162 @@ class AccountController extends Controller
             DB::rollback();
             $respMessage = trans('messages.ChangeCannotBeDone');
             return $this->respondFailedWithMessage($respMessage);
+        }
+
+        $respMessage = trans('messages.Error');
+        return $this->respondFailedWithMessage($respMessage);
+    }
+
+    public function request_phone_verification(Request $request)
+    {
+        # Request BODY validation
+        $validationRules =  [
+            'ip_address' => 'required|max:30|ip',
+        ];
+        $errors = $this->staticValidation($request->all(), $validationRules);
+        if (count($errors) > 0) {
+            $respMessage = $errors->first();
+            return $this->respondWithMissingField($respMessage);
+        };
+
+        $idToken = $request->header('Authorization');
+        $idToken = explode(' ', $idToken);
+
+        # Check Token is 3: 1 is "Token" word, 2 is userID, 3 is the Token 
+        if (count($idToken) == 3) {
+            DB::beginTransaction();
+            try {
+                $member_id = $idToken[1];
+
+                # Select table Member
+                $member = DB::table('member')
+                    ->where('id', $member_id);
+
+                if ($member->get()->count() == 0) {
+                    DB::rollback();
+                    $respMessage = trans('messages.MemberAccountNotFound');
+                    return $this->respondFailedWithMessage($respMessage);
+                } else if ($member->get()->count() > 1) {
+                    DB::rollback();
+                    $respMessage = trans('messages.MemberRegisteredMoreThanOnce');
+                    return $this->respondFailedWithMessage($respMessage);
+                }
+
+                # Object "member" with all column selected
+                $member = $member->first();
+
+                # Check if phone already verified
+                if ($member->phone_number_verify_status == 'VERIFIED') {
+                    DB::rollback();
+                    $respMessage = trans('messages.PhoneStatusAlreadyVerified');
+                    return $this->respondFailedWithMessage($respMessage);
+                }
+
+                # Set Key EXPIRED with passed "expired_time"
+                DB::table('key_user')
+                    ->where([
+                        'type' => 'VERIFYPHONENUMBER',
+                        'status' => 'ACTIVE',
+                    ])
+                    ->where('expired_time', '<', date('Y-m-d H:i:s'))
+                    ->update([
+                        'status' => 'EXPIRED',
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ]);
+
+                # Select table Key User
+                $key_user = DB::table('key_user')
+                    ->where([
+                        'code' => $member->code,
+                        'status' => 'ACTIVE',
+                        'type' => 'VERIFYPHONENUMBER',
+                    ])
+                    ->where('expired_time', '>', date('Y-m-d H:i:s'));
+
+                if ($key_user->get()->count() == 1) {
+                    # Key is exist
+
+                    # Object "key_user" with all column selected
+                    $key_user = $key_user->first();
+
+                    $key_verification = $key_user->value;
+                } else {
+                    # Key didn't exist
+
+                    $key_verification = mt_rand(100000, 999999);
+                    $key_verification = Crypt::encrypt($key_verification);
+
+                    # Key will be expired in 30 minutes
+                    $expired_time = date('Y-m-d H:i:s', strtotime((date('Y-m-d H:i:s') . ' +30 minutes')));
+
+                    # Insert
+                    $valueDB = [
+                        'code' => $member->code,
+                        'ip_address' => $request->input('ip_address'),
+                        'status' => 'ACTIVE',
+                        'type' => 'VERIFYPHONENUMBER',
+                        'value' => $key_verification,
+                        'expired_time' => $expired_time,
+                        'created_at' => date('Y-m-d H:i:s'),
+                    ];
+                    DB::table('key_user')->insert($valueDB);
+                }
+
+                # Select table sms_outbox
+                $sms_outbox = DB::table('sms_outbox')
+                    ->where([
+                        'recipient' => $member->phone_number,
+                        'status' => 'INQUIRY',
+                    ])
+                    ->orderBy('created_at', 'desc');
+
+                if ($sms_outbox->get()->count() > 0) {
+                    # SMS is exist
+
+                    # Object "sms_outbox" with all column selected
+                    $sms_outbox = $sms_outbox->first();
+
+                    # Count interval send SMS request
+                    $to = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', date('Y-m-d H:i:s'));
+                    $from = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $sms_outbox->created_at);
+
+                    # Difference in minutes
+                    $diff_in_minutes = $to->diffInMinutes($from);
+
+                    # Interval request send SMS must after 5 minutes
+                    if ($diff_in_minutes <= 5) {
+                        DB::rollback();
+                        $respMessage = trans('messages.RequestSMSAlreadySavedPleaseWait');
+                        return $this->respondFailedWithMessage($respMessage);
+                    }
+                }
+
+                # Template SMS Message
+                $message = "BRN - Kode verifikasi Anda adalah: [VERIFICATION_NUMBER]. Jangan memberitahu siapapun kode ini termasuk pihak Kami.";
+                $key_verification = Crypt::decrypt($key_verification);
+
+                # Insert verification code to message
+                $message = str_replace('[VERIFICATION_NUMBER]', $key_verification, $message);
+
+                # Insert to sms_outbox
+                $valueDB = [
+                    'recipient' => $member->phone_number,
+                    'message' => $message,
+                    'status' => 'INQUIRY',
+                    'created_at' => date('Y-m-d H:i:s'),
+                ];
+                DB::table('sms_outbox')->insert($valueDB);
+
+                DB::commit();
+                $respMessage = trans('messages.RequestSMSAlreadySavedPleaseCheck');
+                return $this->respondSuccessWithMessageAndData($respMessage);
+            } catch (\Exception $e) {
+                $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e->getMessage());
+
+                DB::rollback();
+                $respMessage = trans('messages.ChangeCannotBeDone');
+                return $this->respondFailedWithMessage($respMessage);
+            }
         }
 
         $respMessage = trans('messages.Error');
