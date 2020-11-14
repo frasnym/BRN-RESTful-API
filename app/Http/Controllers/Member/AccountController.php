@@ -667,4 +667,80 @@ class AccountController extends Controller
         $respMessage = trans('messages.Error');
         return $this->respondFailedWithMessage($respMessage);
     }
+
+    public function change_phone_number(Request $request)
+    {
+        # Request BODY validation
+        $validationRules =  [
+            # (62)  : first 2 digit must be "62"
+            # \d+$  : remaining character must be number
+            # 27 char max, because remaining 3 digit for "(","+",")" and total will be 30 digit. example: (+62).....
+            'phone_number' => 'required|max:27|regex:/(62)\d+$/',
+        ];
+        $errors = $this->staticValidation($request->all(), $validationRules);
+        if (count($errors) > 0) {
+            $respMessage = $errors->first();
+            return $this->respondWithMissingField($respMessage);
+        };
+
+        $phone_number = $request->input('phone_number');
+        # Check if first 2 digit is "62"
+        if (substr($phone_number, 0, 2) == 62) {
+            # Replace "62" with (+62)
+            $phone_number = substr($phone_number, 2);
+            $phone_number = "(+62)$phone_number";
+        } else {
+            $respMessage = trans('messages.ValueMustBeValidPhoneNumber');
+            return $this->respondFailedWithMessage($respMessage);
+        }
+
+        $idToken = $request->header('Authorization');
+        $idToken = explode(' ', $idToken);
+
+        # Check Token is 3: 1 is "Token" word, 2 is userID, 3 is the Token 
+        if (count($idToken) == 3) {
+            DB::beginTransaction();
+            try {
+                $member_id = $idToken[1];
+
+                # Check phone_number if used by other account
+                $check_member = DB::table('member')
+                    ->where('phone_number', $phone_number)
+                    ->where('id', '!=', $member_id);
+                if ($check_member->get()->count() > 0) {
+                    DB::rollback();
+                    $respMessage = trans('messages.PhoneNumberAlreadyRegistered');
+                    return $this->respondFailedWithMessage($respMessage);
+                }
+
+                # Update phone_number and set phone_number_verify_status to "NOT VERIFIED"
+                $affected = DB::table('member')
+                    ->where('id', $member_id)
+                    ->update([
+                        'account_status' => 'ACTIVE',
+                        'phone_number' => $phone_number,
+                        'phone_number_verify_status' => 'NOT VERIFIED',
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ]);
+                if ($affected != 1) {
+                    DB::rollback();
+                    $respMessage = trans('messages.UpdateDataFailed');
+                    return $this->respondFailedWithMessage($respMessage);
+                }
+
+                DB::commit();
+                $respMessage = trans('messages.ProccessSuccess');
+                return $this->respondSuccessWithMessageAndData($respMessage);
+            } catch (\Exception $e) {
+                $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e->getMessage());
+
+                DB::rollback();
+                $respMessage = trans('messages.ChangeCannotBeDone');
+                return $this->respondFailedWithMessage($respMessage);
+            }
+        }
+
+        $respMessage = trans('messages.Error');
+        return $this->respondFailedWithMessage($respMessage);
+    }
 }

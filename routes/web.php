@@ -33,6 +33,7 @@ $router->group(['prefix' => 'member'], function () use ($router) {
 
     # Update Account Data
     $router->post('/change_email_address', 'Member\AccountController@change_email_address');
+    $router->post('/change_phone_number', 'Member\AccountController@change_phone_number');
 });
 
 $router->group(['prefix' => 'microservices'], function () use ($router) {

@@ -81,6 +81,7 @@ class Controller extends BaseController
             'max' => trans('messages.CharactersLongMustBeMaximumMaxDigit_Attribute'),
             'min' => trans('messages.CharactersLongMustBeMinimunMinDigit_Attribute'),
             'ip' => trans('messages.ValueMustBeValidIPAddress_Attribute'),
+            'phone_number.regex' => trans('messages.ValueMustBeValidPhoneNumber_Attribute'),
         ];
         $validator = Validator::make($input, $rules, $messages);
         return $validator->errors();

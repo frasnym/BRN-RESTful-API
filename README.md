@@ -26,6 +26,7 @@ Laravel Lumen is a stunningly fast PHP micro-framework for building web applicat
     <li>Request Phone Verification. Save code which expired in specific time and make queue for sms gateway</li>
     <li>Send a SMS with <b><a href="http://dutasms.com/">DutaSMS</a></b></li>
     <li>Verify Phone Number. Check suitability between phone number and token key</li>
+    <li>Change Phone Number. Change phone number if registered number is mistyped</li>
 </ol>
 
 ### Installing

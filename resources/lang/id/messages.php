@@ -6,6 +6,7 @@ return [
     'CharactersLongMustBeMaximumMaxDigit_Attribute' => 'Jumlah karakter harus maksimal :max digit: :attribute',
     'CharactersLongMustBeMinimunMinDigit_Attribute' => 'Jumlah karakter harus minimum :min digit: :attribute',
     'ValueMustBeValidIPAddress_Attribute' => 'Mohon menggunakan Alamat IP yang benar: :attribute',
+    'ValueMustBeValidPhoneNumber_Attribute' => 'Mohon menggunakan Nomor Telepon yang benar: :attribute',
 
     'ProccessSuccess' => 'Proses berhasil',
     'Error' => 'Error',
