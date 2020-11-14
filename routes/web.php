@@ -28,13 +28,11 @@ $router->group(['prefix' => 'member'], function () use ($router) {
     # Verification
     $router->post('/request_email_verification', 'Member\AccountController@request_email_verification');
     $router->post('/request_phone_verification', 'Member\AccountController@request_phone_verification');
+    $router->post('/verify_email_address', 'Member\AccountController@verify_email_address');
+    $router->post('/verify_phone_number', 'Member\AccountController@verify_phone_number');
 
     # Update Account Data
     $router->post('/change_email_address', 'Member\AccountController@change_email_address');
-    // TODO Phone Number Verification DutaSMS
-
-    # Open
-    $router->post('/verify_email_address', 'Member\AccountController@verify_email_address');
 });
 
 $router->group(['prefix' => 'microservices'], function () use ($router) {

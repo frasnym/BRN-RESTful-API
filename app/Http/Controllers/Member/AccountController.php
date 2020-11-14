@@ -15,14 +15,12 @@ class AccountController extends Controller
         $this->middleware('auth', [
             'except' => [
                 'verify_email_address',
-                'request_phone_verification',
             ],
         ]);
 
         $this->middleware('account_check', [
             'except' => [
                 'verify_email_address',
-                'request_phone_verification',
             ],
         ]);
     }
@@ -526,6 +524,136 @@ class AccountController extends Controller
 
                 DB::commit();
                 $respMessage = trans('messages.RequestSMSAlreadySavedPleaseCheck');
+                return $this->respondSuccessWithMessageAndData($respMessage);
+            } catch (\Exception $e) {
+                $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e->getMessage());
+
+                DB::rollback();
+                $respMessage = trans('messages.ChangeCannotBeDone');
+                return $this->respondFailedWithMessage($respMessage);
+            }
+        }
+
+        $respMessage = trans('messages.Error');
+        return $this->respondFailedWithMessage($respMessage);
+    }
+
+    public function verify_phone_number(Request $request)
+    {
+        # Request BODY validation
+        $validationRules =  [
+            'key_token' => 'required',
+        ];
+        $errors = $this->staticValidation($request->all(), $validationRules);
+        if (count($errors) > 0) {
+            $respMessage = $errors->first();
+            return $this->respondWithMissingField($respMessage);
+        };
+
+        $key_token = $request->input('key_token');
+
+        $idToken = $request->header('Authorization');
+        $idToken = explode(' ', $idToken);
+
+        # Check Token is 3: 1 is "Token" word, 2 is userID, 3 is the Token 
+        if (count($idToken) == 3) {
+            DB::beginTransaction();
+            try {
+                $member_id = $idToken[1];
+
+                # Set Key EXPIRED with passed "expired_time"
+                DB::table('key_user')
+                    ->where([
+                        'type' => 'VERIFYPHONENUMBER',
+                        'status' => 'ACTIVE',
+                    ])
+                    ->where('expired_time', '<', date('Y-m-d H:i:s'))
+                    ->update([
+                        'status' => 'EXPIRED',
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ]);
+
+                # Select table Member
+                $member = DB::table('member')
+                    ->where('id', $member_id);
+
+                if ($member->get()->count() == 0) {
+                    DB::commit();
+                    $respMessage = trans('messages.MemberAccountNotFound');
+                    return $this->respondFailedWithMessage($respMessage);
+                } else if ($member->get()->count() > 1) {
+                    DB::commit();
+                    $respMessage = trans('messages.MemberRegisteredMoreThanOnce');
+                    return $this->respondFailedWithMessage($respMessage);
+                }
+
+                # Object "member" with all column selected
+                $member = $member->first();
+
+                # Select table key_user
+                $key_user = DB::table('key_user')
+                    ->where([
+                        'type' => 'VERIFYPHONENUMBER',
+                        'code' => $member->code,
+                    ])
+                    ->orderBy('id', 'desc');
+
+                # Object "key_user" with all column selected
+                $key_user = $key_user->first();
+
+                # Check status value key_user
+                if ($key_user->status == 'USED') {
+                    DB::commit();
+                    $respMessage = trans('messages.KeyTokenAlreadyUsed');
+                    return $this->respondFailedWithMessage($respMessage);
+                } else if ($key_user->status == 'EXPIRED') {
+                    DB::commit();
+                    $respMessage = trans('messages.KeyTokenExpired');
+                    return $this->respondFailedWithMessage($respMessage);
+                }
+
+                # Check if key_token match user request
+                if ($key_token != Crypt::decrypt($key_user->value)) {
+                    DB::commit();
+                    $respMessage = trans('messages.KeyTokenAndPhoneNumberDidNotMatch');
+                    return $this->respondFailedWithMessage($respMessage);
+                }
+
+                # Check if phone_number_verify_status already verified
+                if ($member->phone_number_verify_status == 'VERIFIED') {
+                    DB::commit();
+                    $respMessage = trans('messages.PhoneStatusAlreadyVerified');
+                    return $this->respondFailedWithMessage($respMessage);
+                }
+
+                # Update member: set phone_number_verify_status to "VERIFIED"
+                $affected = DB::table('member')
+                    ->where('id', $member_id)
+                    ->update([
+                        'phone_number_verify_status' => 'VERIFIED',
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ]);
+                if ($affected != 1) {
+                    DB::rollback();
+                    $respMessage = trans('messages.UpdateDataFailed');
+                    return $this->respondFailedWithMessage($respMessage);
+                }
+
+                # Update key_user: set status to "USED"
+                $affected = DB::table('key_user')
+                    ->where('id', $key_user->id)
+                    ->update([
+                        'status' => 'USED',
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ]);
+                if ($affected != 1) {
+                    DB::rollback();
+                    $respMessage = trans('messages.UpdateDataFailed');
+                    return $this->respondFailedWithMessage($respMessage);
+                }
+
+                DB::commit();
+                $respMessage = trans('messages.ProccessSuccess');
                 return $this->respondSuccessWithMessageAndData($respMessage);
             } catch (\Exception $e) {
                 $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e->getMessage());

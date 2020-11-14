@@ -1,4 +1,4 @@
-# BRN API - Lumen PHP Framework
+# Community Member API - Lumen PHP Framework
 
 Laravel Lumen is a stunningly fast PHP micro-framework for building web applications with expressive, elegant syntax. We believe development must be an enjoyable, creative experience to be truly fulfilling. Lumen attempts to take the pain out of development by easing common tasks used in the majority of web projects, such as routing, database abstraction, queueing, and caching.
 
@@ -25,6 +25,7 @@ Laravel Lumen is a stunningly fast PHP micro-framework for building web applicat
     <li>Send a HTML Email with <b>illuminate/mail</b> package</li>
     <li>Request Phone Verification. Save code which expired in specific time and make queue for sms gateway</li>
     <li>Send a SMS with <b><a href="http://dutasms.com/">DutaSMS</a></b></li>
+    <li>Verify Phone Number. Check suitability between phone number and token key</li>
 </ol>
 
 ### Installing

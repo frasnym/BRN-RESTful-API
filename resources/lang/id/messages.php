@@ -30,4 +30,5 @@ return [
     'KeyTokenAlreadyUsed' => 'Key Token sudah digunakan',
     'KeyTokenExpired' => 'Key Token sudah kedaluwarsa',
     'KeyTokenAndEmailAddressDidNotMatch' => 'Key Token dan alamat email tidak sesuai',
+    'KeyTokenAndPhoneNumberDidNotMatch' => 'Key Token dan nomor telepon tidak sesuai',
 ];
