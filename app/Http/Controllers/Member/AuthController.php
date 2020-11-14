@@ -30,7 +30,10 @@ class AuthController extends Controller
     {
         $validationRules =  [
             'full_name' => 'required|between:5,100',
-            'phone_number' => 'required|max:30',
+            # (62)  : first 2 digit must be "62"
+            # \d+$  : remaining character must be number
+            # 27 char max, because remaining 3 digit for "(","+",")" and total will be 30 digit. example: (+62).....
+            'phone_number' => 'required|max:27|regex:/(62)\d+$/',
             'shirt_size' => 'required|max:10',
             'email_address' => 'required|email|max:100',
             'current_address' => 'required',
@@ -44,6 +47,15 @@ class AuthController extends Controller
 
         $full_name = $request->input('full_name');
         $phone_number = $request->input('phone_number');
+        # Check if first 2 digit is "62"
+        if (substr($phone_number, 0, 2) == 62) {
+            # Replace "62" with (+62)
+            $phone_number = substr($phone_number, 2);
+            $phone_number = "(+62)$phone_number";
+        } else {
+            $respMessage = trans('messages.ValueMustBeValidPhoneNumber');
+            return $this->respondFailedWithMessage($respMessage);
+        }
         $email_address = strtolower($request->input('email_address'));
         $current_address = $request->input('current_address');
         $shirt_size = $request->input('shirt_size');

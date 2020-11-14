@@ -43,11 +43,12 @@ class SmsController extends Controller
 
                     # DutaSMS
                     $message = $value->message;
+                    $recipient = str_replace('(+62)', '0', $value->recipient);
                     $user = env('DUTASMS_USER');
                     $password = env('DUTASMS_PASSWORD');
-                    $auth = MD5($user . $password . $value->recipient);
+                    $auth = MD5($user . $password . $recipient);
                     $message = urlencode($message);
-                    $url .= "?username=" . $user . "&mobile=" . $value->recipient . "&message=" . $message . "&auth=" . $auth;
+                    $url .= "?username=" . $user . "&mobile=" . $recipient . "&message=" . $message . "&auth=" . $auth;
 
                     $curlRequest = $this->curlRequest($url, $type, $headers, $body);
                     $code_response = substr($curlRequest, 0, 4);
