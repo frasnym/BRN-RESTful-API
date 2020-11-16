@@ -11,15 +11,21 @@ return [
     'ProccessSuccess' => 'Proses berhasil',
     'Error' => 'Error',
     'DataRegisteredMoreThanOnce' => 'Data terdaftar lebih dari sekali',
-    'EmailAddressAlreadyRegistered' => 'Alamat email sudah terdaftar',
-    'PhoneNumberAlreadyRegistered' => 'Nomor telepon sudah terdaftar',
     'UpdateDataFailed' => 'Perubahan data gagal',
     'ChangeCannotBeDone' => 'Perubahan tidak dapat dilakukan',
     'StatusNotIdentified' => 'Status tidak teridentifikasi',
+
+    # Member Registration
+    'EmailAddressAlreadyRegistered' => 'Alamat email sudah terdaftar',
+    'PhoneNumberAlreadyRegistered' => 'Nomor telepon sudah terdaftar',
+
+    # Member Account
     'MemberAccountNotFound' => 'Akun anggota tidak ditemukan',
     'MemberRegisteredMoreThanOnce' => 'Akun anggota terdaftar lebih dari sekali, silahkan kontak admin',
     'MemberAccountInactive' => 'Akun anggota tidak aktif, silahkan kontak admin',
     'InvalidAccountPassword' => 'Password akun salah',
+
+    # Member Verification
     'EmailStatusAlreadyVerified' => 'Status email sudah terverifikasi',
     'RequestEmailAlreadySavedPleaseWait' => 'Permintaan email sudah tersimpan, mohon untuk menunggu',
     'RequestEmailAlreadySavedPleaseCheck' => 'Permintaan email sudah tersimpan, mohon cek email anda',
@@ -32,4 +38,21 @@ return [
     'KeyTokenExpired' => 'Key Token sudah kedaluwarsa',
     'KeyTokenAndEmailAddressDidNotMatch' => 'Key Token dan alamat email tidak sesuai',
     'KeyTokenAndPhoneNumberDidNotMatch' => 'Key Token dan nomor telepon tidak sesuai',
+
+    # Member Registration Payment
+    'RegistrationPaymentStatusAlreadyVerified' => 'Status pembayaran pendaftaran sudah terverifikasi',
+
+    # Payment Method
+    'PaymentMethodAccountNotFound' => 'Data metode pembayaran tidak ditemukan',
+    'PaymentMethodRegisteredMoreThanOnce' => 'Data metode pembayaran terdaftar lebih dari sekali, silahkan kontak admin',
+    'PaymentMethodAccountInactive' => 'Data metode pembayaran tidak aktif, silahkan kontak admin',
+
+    # Sales Item
+    'SalesItemAccountNotFound' => 'Data barang penjualan tidak ditemukan',
+    'SalesItemRegisteredMoreThanOnce' => 'Data barang penjualan terdaftar lebih dari sekali, silahkan kontak admin',
+    'SalesItemAccountInactive' => 'Data barang penjualan tidak aktif, silahkan kontak admin',
+
+    # Order
+    'OrderRegisteredMoreThanOnce' => 'Data order tercatat lebih dari sekali',
+    'RequestPaymentFailed' => 'Permintaan pembayaran gagal, silahkan kontak admin',
 ];

@@ -18,6 +18,9 @@ Laravel Lumen is a stunningly fast PHP micro-framework for building web applicat
     <li>Send a SMS with <b><a href="http://dutasms.com/">DutaSMS</a></b></li>
     <li>Verify Phone Number. Check suitability between phone number and token key</li>
     <li>Change Phone Number. Change phone number if registered number is mistyped</li>
+    <li>Payment Method List. Get supported payment method</li>
+    <li>Request Payment using Payment Gateway Xendit. Support: Invoice</li>
+    <li>Registration Request Payment</li>
 </ol>
 
 ## Tools Used

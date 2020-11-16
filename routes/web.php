@@ -36,6 +36,14 @@ $router->group(['prefix' => 'member'], function () use ($router) {
     $router->post('/change_phone_number', 'Member\AccountController@change_phone_number');
 });
 
+$router->group(['prefix' => 'order'], function () use ($router) {
+    # Order Master
+    $router->get('/payment_method_list', 'Sales\OrderController@payment_method_list');
+
+    # Registration Order
+    $router->post('/registration_request_payment', 'Sales\OrderController@registration_request_payment');
+});
+
 $router->group(['prefix' => 'microservices'], function () use ($router) {
     # Email
     $router->get('/send_inquiry_email', 'Microservices\EmailController@send_inquiry_email');

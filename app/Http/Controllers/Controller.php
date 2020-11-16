@@ -14,13 +14,14 @@ class Controller extends BaseController
      * @param $body
      * @return json
      */
-    protected function curlRequest($url, $type, $headers, $body)
+    protected function curlRequest($url, $type, $headers, $body, $basic_auth = null)
     {
         $config['useragent'] = 'Mozilla/5.0 (Windows NT 6.2; WOW64; rv:17.0) Gecko/20100101 Firefox/17.0';
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_USERAGENT, $config['useragent']);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        if ($basic_auth) curl_setopt($ch, CURLOPT_USERPWD, $basic_auth);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_URL, $url);
         if ($type == 'POST') {
