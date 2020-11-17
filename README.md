@@ -21,6 +21,7 @@ Laravel Lumen is a stunningly fast PHP micro-framework for building web applicat
     <li>Payment Method List. Get supported payment method</li>
     <li>Request Payment using Payment Gateway Xendit. Support: Invoice</li>
     <li>Registration Request Payment</li>
+    <li>Microservices to check any data expired (key, payment)</li>
 </ol>
 
 ## Tools Used

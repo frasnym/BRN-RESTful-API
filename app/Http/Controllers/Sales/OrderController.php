@@ -224,6 +224,7 @@ class OrderController extends Controller
                     # Check if cURL request is success by checking is "id" available
                     if (isset($curlRequest->id)) {
                         $payment_code = $curlRequest->invoice_url;
+                        $expiry_date = date('Y-m-d H:i:s', strtotime($curlRequest->expiry_date));
 
                         # Insert to table "order_payment"
                         $valueDB = [
@@ -233,6 +234,7 @@ class OrderController extends Controller
                             'request' => json_encode($cURL_body),
                             'response' => json_encode($curlRequest),
                             'payment_code' => $payment_code,
+                            'expiry_date' => $expiry_date,
                             'created_at' => date('Y-m-d H:i:s'),
                         ];
                         # Insert to Database and get ID in return
@@ -244,6 +246,7 @@ class OrderController extends Controller
                             'grand_total_price' => $grand_total_price,
                             'payment_method' => "$payment_method->name $payment_method->detail $payment_method->payment_gateway",
                             'payment_code' => $payment_code,
+                            'expiry_date' => $expiry_date,
                         ];
                         $respMessage = trans('messages.ProccessSuccess');
                         return $this->respondSuccessWithMessageAndData($respMessage, $respData);

@@ -1,6 +1,7 @@
 <?php
 
 /** @var \Laravel\Lumen\Routing\Router $router */
+
 use Illuminate\Support\Facades\App;
 
 
@@ -50,6 +51,9 @@ $router->group(['prefix' => 'microservices'], function () use ($router) {
 
     # Phone
     $router->get('/send_inquiry_sms', 'Microservices\SmsController@send_inquiry_sms');
+
+    # Sales
+    $router->get('/check_expiry', 'Microservices\DataController@check_expiry');
 });
 
 $router->get('/key', 'ExampleController@generateKey');
