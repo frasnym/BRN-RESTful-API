@@ -159,7 +159,36 @@ class OrderController extends Controller
                     return $this->respondFailedWithMessage($respMessage);
                 } else if ($order->get()->count() == 1) {
                     // * Invoice already generated
-                    // TODO invoice already generated
+
+                    # Object "order" with all column selected
+                    $order = $order->first();
+                    if ($order->status == 'REQPAYMENT') {
+
+                        # Select table "order_payment" for order_id
+                        $order_payment = DB::table('order_payment')
+                            ->where([
+                                'order_id' => $order->id,
+                                'payment_method_id' => $order->payment_method_id,
+                                'status' => 'INQUIRY',
+                            ])
+                            ->orderBy('order_id', 'desc');
+
+                        # Object "order_payment" with all column selected
+                        $order_payment = $order_payment->first();
+
+                        DB::commit();
+                        $respData = [
+                            'invoice' => $order->invoice,
+                            'grand_total_price' => $order->grand_total_price,
+                            'payment_method' => "$payment_method->name $payment_method->detail $payment_method->payment_gateway",
+                            'payment_code' => $order_payment->payment_code,
+                            'expiry_date' => $order_payment->expiry_date,
+                        ];
+                        $respMessage = trans('messages.ProccessSuccess');
+                        return $this->respondSuccessWithMessageAndData($respMessage, $respData);
+                    } else {
+                        // TODO Other status
+                    }
                 } else {
                     // * Invoice not generated
 
