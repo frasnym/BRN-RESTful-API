@@ -9,6 +9,8 @@ return [
     'ValueMustBeValidPhoneNumber_Attribute' => 'Mohon menggunakan Nomor Telepon yang benar: :attribute',
 
     'ProccessSuccess' => 'Proses berhasil',
+    'cURLProccessSuccess' => 'Proses cURL berhasil',
+    'cURLProccessFailed' => 'Proses cURL failed',
     'Error' => 'Error',
     'DataRegisteredMoreThanOnce' => 'Data terdaftar lebih dari sekali',
     'UpdateDataFailed' => 'Perubahan data gagal',
@@ -53,6 +55,11 @@ return [
     'SalesItemAccountInactive' => 'Data barang penjualan tidak aktif, silahkan kontak admin',
 
     # Order
-    'OrderRegisteredMoreThanOnce' => 'Data order tercatat lebih dari sekali',
+    'OrderRegisteredMoreThanOnce' => 'Data pesanan tercatat lebih dari sekali',
     'RequestPaymentFailed' => 'Permintaan pembayaran gagal, silahkan kontak admin',
+    'PaymentMethodNotDefined' => 'Metode pembayaran belum ditentukan',
+    'OrderAlreadyPaid' => 'Data pesanan sudah dibayar',
+    'OrderRejected' => 'Data pesanan ditolak, silahkan kontak admin',
+    'OrderCanceled' => 'Data pesanan sudah dibatalkan',
+    'OrderExpired' => 'Data pesanan sudah kedaluwarsa',
 ];

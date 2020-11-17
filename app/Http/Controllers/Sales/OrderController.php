@@ -162,7 +162,74 @@ class OrderController extends Controller
 
                     # Object "order" with all column selected
                     $order = $order->first();
-                    if ($order->status == 'REQPAYMENT') {
+
+                    $order_id = $order->id;
+                    $invoice = $order->invoice;
+                    $grand_total_price = $order->grand_total_price;
+                    $payment_description = "PAYMENT BRN REGISTRATION. INVOICE: $invoice, IDR " . number_format($grand_total_price);
+
+                    if ($order->status == 'INQUIRY') {
+                        # Xendit Request Payment
+                        $xenditRequestPayment = $this->xenditRequestPayment($payment_method->id, $payment_description, $invoice, $grand_total_price, $member->email_address);
+
+                        if ($xenditRequestPayment['success']) {
+                            # Success
+                            $payment_code = $xenditRequestPayment['payment_code'];
+
+                            # Insert to table "order_payment"
+                            $valueDB = [
+                                'order_id' => $order_id,
+                                'payment_method_id' => $payment_method->id,
+                                'status' => 'INQUIRY',
+                                'request' => json_encode($xenditRequestPayment['request']),
+                                'response' => json_encode($xenditRequestPayment['response']),
+                                'payment_code' => $payment_code,
+                                'created_at' => date('Y-m-d H:i:s'),
+                            ];
+                            if ($xenditRequestPayment['expiry_date']) $valueDB['expiry_date'] = $xenditRequestPayment['expiry_date'];
+                            # Insert to Database and get ID in return
+                            DB::table('order_payment')->insert($valueDB);
+
+                            # Update "order" change "status" to "REQPAYMENT"
+                            $affected = DB::table('order')
+                                ->where([
+                                    'id' => $order_id,
+                                    'status' => 'INQUIRY',
+                                ])
+                                ->update([
+                                    'status' => 'REQPAYMENT',
+                                    'updated_at' => date('Y-m-d H:i:s'),
+                                ]);
+                            if ($affected != 1) {
+                                DB::rollback();
+                                $respMessage = trans('messages.UpdateDataFailed');
+                                return $this->respondFailedWithMessage($respMessage);
+                            } else {
+                                DB::commit();
+                                $respData = [
+                                    'invoice' => $invoice,
+                                    'grand_total_price' => $grand_total_price,
+                                    'payment_method' => "$payment_method->name $payment_method->detail $payment_method->payment_gateway",
+                                    'payment_code' => $payment_code,
+                                    'expiry_date' => $xenditRequestPayment['expiry_date'],
+                                ];
+                                $respMessage = trans('messages.ProccessSuccess');
+                                return $this->respondSuccessWithMessageAndData($respMessage, $respData);
+                            }
+                        } else {
+                            # Failed
+                            $teleError = [
+                                'Title' => 'RequestPaymentFailed',
+                                'Request' => $xenditRequestPayment['request'],
+                                'Response' => $xenditRequestPayment['response'],
+                            ];
+                            $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $teleError);
+
+                            DB::rollback();
+                            $respMessage = trans('messages.RequestPaymentFailed');
+                            return $this->respondFailedWithMessage($respMessage);
+                        }
+                    } else if ($order->status == 'REQPAYMENT') {
 
                         # Select table "order_payment" for order_id
                         $order_payment = DB::table('order_payment')
@@ -186,8 +253,83 @@ class OrderController extends Controller
                         ];
                         $respMessage = trans('messages.ProccessSuccess');
                         return $this->respondSuccessWithMessageAndData($respMessage, $respData);
+                    } else if (in_array($order->status, ['PAID', 'VERIFIED', 'SENT', 'DONE'])) {
+                        DB::commit();
+                        $respMessage = trans('messages.OrderAlreadyPaid');
+                        return $this->respondFailedWithMessage($respMessage);
+                    } else if ($order->status == 'REJECT') {
+                        DB::commit();
+                        $respMessage = trans('messages.OrderRejected');
+                        return $this->respondFailedWithMessage($respMessage);
+                    } else if ($order->status == 'CANCEL') {
+                        DB::commit();
+                        $respMessage = trans('messages.OrderCanceled');
+                        return $this->respondFailedWithMessage($respMessage);
+                    } else if ($order->status == 'EXPIRED') {
+                        # Xendit Request Payment
+                        $xenditRequestPayment = $this->xenditRequestPayment($payment_method->id, $payment_description, $invoice, $grand_total_price, $member->email_address);
+
+                        if ($xenditRequestPayment['success']) {
+                            # Success
+                            $payment_code = $xenditRequestPayment['payment_code'];
+
+                            # Insert to table "order_payment"
+                            $valueDB = [
+                                'order_id' => $order_id,
+                                'payment_method_id' => $payment_method->id,
+                                'status' => 'INQUIRY',
+                                'request' => json_encode($xenditRequestPayment['request']),
+                                'response' => json_encode($xenditRequestPayment['response']),
+                                'payment_code' => $payment_code,
+                                'created_at' => date('Y-m-d H:i:s'),
+                            ];
+                            if ($xenditRequestPayment['expiry_date']) $valueDB['expiry_date'] = $xenditRequestPayment['expiry_date'];
+                            # Insert to Database and get ID in return
+                            DB::table('order_payment')->insert($valueDB);
+
+                            # Update "order" change "status" to "REQPAYMENT"
+                            $affected = DB::table('order')
+                                ->where([
+                                    'id' => $order_id,
+                                    'status' => 'EXPIRED',
+                                ])
+                                ->update([
+                                    'status' => 'REQPAYMENT',
+                                    'updated_at' => date('Y-m-d H:i:s'),
+                                ]);
+                            if ($affected != 1) {
+                                DB::rollback();
+                                $respMessage = trans('messages.UpdateDataFailed');
+                                return $this->respondFailedWithMessage($respMessage);
+                            } else {
+                                DB::commit();
+                                $respData = [
+                                    'invoice' => $invoice,
+                                    'grand_total_price' => $grand_total_price,
+                                    'payment_method' => "$payment_method->name $payment_method->detail $payment_method->payment_gateway",
+                                    'payment_code' => $payment_code,
+                                    'expiry_date' => $xenditRequestPayment['expiry_date'],
+                                ];
+                                $respMessage = trans('messages.ProccessSuccess');
+                                return $this->respondSuccessWithMessageAndData($respMessage, $respData);
+                            }
+                        } else {
+                            # Failed
+                            $teleError = [
+                                'Title' => 'RequestPaymentFailed',
+                                'Request' => $xenditRequestPayment['request'],
+                                'Response' => $xenditRequestPayment['response'],
+                            ];
+                            $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $teleError);
+
+                            DB::rollback();
+                            $respMessage = trans('messages.RequestPaymentFailed');
+                            return $this->respondFailedWithMessage($respMessage);
+                        }
                     } else {
-                        // TODO Other status
+                        DB::rollBack();
+                        $respMessage = trans('messages.StatusNotIdentified');
+                        return $this->respondFailedWithMessage($respMessage);
                     }
                 } else {
                     // * Invoice not generated
@@ -231,43 +373,27 @@ class OrderController extends Controller
                         DB::table('order_item')->insert($cart[$key]);
                     }
 
-                    # Xendit Create Invoice
-                    $cURL_url = 'https://api.xendit.co/v2/invoices';
-                    $cURL_headers = [
-                        'Content-Type: application/json',
-                    ];
-                    $pg_description = "PAYMENT BRN REGISTRATION. INVOICE: $invoice, IDR " . number_format($grand_total_price);
-                    $cURL_body = [
-                        'external_id' => $invoice,
-                        'amount' => $grand_total_price,
-                        'payer_email' => $member->email_address,
-                        'description' => $pg_description,
-                        // 'callback_virtual_account_id' => , // Fixed Virtual Account
-                    ];
-                    $XENDIT_SECRET_KEY = env('XENDIT_SECRET_KEY');
-                    $cURL_basic_auth = "$XENDIT_SECRET_KEY:";
+                    # Xendit Request Payment
+                    $payment_description = "PAYMENT BRN REGISTRATION. INVOICE: $invoice, IDR " . number_format($grand_total_price);
+                    $xenditRequestPayment = $this->xenditRequestPayment($payment_method->id, $payment_description, $invoice, $grand_total_price, $member->email_address);
 
-                    $curlRequest = $this->curlRequest($cURL_url, 'POST', $cURL_headers, $cURL_body, $cURL_basic_auth);
-                    $curlRequest = json_decode($curlRequest);
-
-                    # Check if cURL request is success by checking is "id" available
-                    if (isset($curlRequest->id)) {
-                        $payment_code = $curlRequest->invoice_url;
-                        $expiry_date = date('Y-m-d H:i:s', strtotime($curlRequest->expiry_date));
+                    if ($xenditRequestPayment['success']) {
+                        # Success
+                        $payment_code = $xenditRequestPayment['payment_code'];
 
                         # Insert to table "order_payment"
                         $valueDB = [
                             'order_id' => $order_id,
                             'payment_method_id' => $payment_method->id,
                             'status' => 'INQUIRY',
-                            'request' => json_encode($cURL_body),
-                            'response' => json_encode($curlRequest),
+                            'request' => json_encode($xenditRequestPayment['request']),
+                            'response' => json_encode($xenditRequestPayment['response']),
                             'payment_code' => $payment_code,
-                            'expiry_date' => $expiry_date,
                             'created_at' => date('Y-m-d H:i:s'),
                         ];
+                        if ($xenditRequestPayment['expiry_date']) $valueDB['expiry_date'] = $xenditRequestPayment['expiry_date'];
                         # Insert to Database and get ID in return
-                        $order_id = DB::table('order_payment')->insertGetId($valueDB);
+                        DB::table('order_payment')->insert($valueDB);
 
                         DB::commit();
                         $respData = [
@@ -275,15 +401,16 @@ class OrderController extends Controller
                             'grand_total_price' => $grand_total_price,
                             'payment_method' => "$payment_method->name $payment_method->detail $payment_method->payment_gateway",
                             'payment_code' => $payment_code,
-                            'expiry_date' => $expiry_date,
+                            'expiry_date' => $xenditRequestPayment['expiry_date'],
                         ];
                         $respMessage = trans('messages.ProccessSuccess');
                         return $this->respondSuccessWithMessageAndData($respMessage, $respData);
                     } else {
+                        # Failed
                         $teleError = [
                             'Title' => 'RequestPaymentFailed',
-                            'Request' => $cURL_body,
-                            'Response' => $curlRequest,
+                            'Request' => $xenditRequestPayment['request'],
+                            'Response' => $xenditRequestPayment['response'],
                         ];
                         $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $teleError);
 

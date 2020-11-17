@@ -56,7 +56,7 @@ class DataController extends Controller
                         'status' => 'REQPAYMENT',
                     ])
                     ->update([
-                        'status' => 'INQUIRY',
+                        'status' => 'EXPIRED',
                         'updated_at' => date('Y-m-d H:i:s'),
                     ]);
 

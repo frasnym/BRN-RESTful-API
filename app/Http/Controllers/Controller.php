@@ -8,10 +8,78 @@ use Illuminate\Support\Facades\Validator;
 class Controller extends BaseController
 {
     /**
+     * @param $payment_method_id
+     * @param $payment_description
+     * @param $invoice
+     * @param $grand_total
+     * @param $email_address
+     * @return json
+     */
+    protected function xenditRequestPayment($payment_method_id, $payment_description, $invoice, $grand_total, $email_address)
+    {
+        $respOutput = [
+            'success' => false,
+            'message' => '',
+            'expiry_date' => null,
+            'payment_code' => null,
+        ];
+        if ($payment_method_id == 1) {
+            # Invoice
+            $cURL_url = 'https://api.xendit.co/v2/invoices';
+            $cURL_body = [
+                'external_id' => $invoice,
+                'amount' => $grand_total,
+                'payer_email' => $email_address,
+                'description' => $payment_description,
+                // 'callback_virtual_account_id' => , // Fixed Virtual Account
+            ];
+        } else {
+            $respOutput['message'] = trans('messages.PaymentMethodNotDefined');
+            return $respOutput;
+        }
+
+        $config['useragent'] = 'Mozilla/5.0 (Windows NT 6.2; WOW64; rv:17.0) Gecko/20100101 Firefox/17.0';
+        $cURL_headers = [
+            'Content-Type: application/json',
+        ];
+        $XENDIT_SECRET_KEY = env('XENDIT_SECRET_KEY');
+        $cURL_basic_auth = "$XENDIT_SECRET_KEY:";
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_USERAGENT, $config['useragent']);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $cURL_headers);
+        curl_setopt($ch, CURLOPT_USERPWD, $cURL_basic_auth);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch, CURLOPT_URL, $cURL_url);
+        curl_setopt($ch, CURLOPT_POST, count($cURL_body));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($cURL_body));
+
+        $output = curl_exec($ch);
+        curl_close($ch);
+
+        $output = json_decode($output, true);
+
+        if ($payment_method_id == 1 && isset($output['id'])) {
+            $respOutput['success'] = true;
+            $respOutput['message'] = trans('messages.cURLProccessSuccess');
+            $respOutput['expiry_date'] = date('Y-m-d H:i:s', strtotime($output['expiry_date']));
+            $respOutput['payment_code'] = $output['invoice_url'];
+        } else {
+            $respOutput['success'] = true;
+            $respOutput['message'] = trans('messages.cURLProccessFailed');
+        }
+
+        $respOutput['request'] = $cURL_body;
+        $respOutput['response'] = $output;
+        return $respOutput;
+    }
+
+    /**
      * @param $url
      * @param $type
      * @param $headers
      * @param $body
+     * @param $basic_auth
      * @return json
      */
     protected function curlRequest($url, $type, $headers, $body, $basic_auth = null)
