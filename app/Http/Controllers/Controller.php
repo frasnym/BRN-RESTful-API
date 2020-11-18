@@ -24,6 +24,7 @@ class Controller extends BaseController
             'payment_code' => null,
             'request' => null,
             'response' => null,
+            'external_id' => null,
         ];
         if ($payment_method_id == 3) {
             # Invoice
@@ -66,6 +67,7 @@ class Controller extends BaseController
             $respOutput['message'] = trans('messages.cURLProccessSuccess');
             $respOutput['expiry_date'] = date('Y-m-d H:i:s', strtotime($output['expiry_date']));
             $respOutput['payment_code'] = $output['invoice_url'];
+            $respOutput['external_id'] = $output['id'];
         } else {
             $respOutput['success'] = false;
             $respOutput['message'] = trans('messages.cURLProccessFailed');

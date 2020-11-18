@@ -183,6 +183,7 @@ class OrderController extends Controller
                                 'status' => 'INQUIRY',
                                 'request' => json_encode($xenditRequestPayment['request']),
                                 'response' => json_encode($xenditRequestPayment['response']),
+                                'external_id' => $xenditRequestPayment['external_id'],
                                 'payment_code' => $payment_code,
                                 'created_at' => date('Y-m-d H:i:s'),
                             ];
@@ -281,6 +282,7 @@ class OrderController extends Controller
                                 'request' => json_encode($xenditRequestPayment['request']),
                                 'response' => json_encode($xenditRequestPayment['response']),
                                 'payment_code' => $payment_code,
+                                'external_id' => $xenditRequestPayment['external_id'],
                                 'created_at' => date('Y-m-d H:i:s'),
                             ];
                             if ($xenditRequestPayment['expiry_date']) $valueDB['expiry_date'] = $xenditRequestPayment['expiry_date'];
@@ -390,6 +392,7 @@ class OrderController extends Controller
                             'request' => json_encode($xenditRequestPayment['request']),
                             'response' => json_encode($xenditRequestPayment['response']),
                             'payment_code' => $payment_code,
+                            'external_id' => $xenditRequestPayment['external_id'],
                             'created_at' => date('Y-m-d H:i:s'),
                         ];
                         if ($xenditRequestPayment['expiry_date']) $valueDB['expiry_date'] = $xenditRequestPayment['expiry_date'];

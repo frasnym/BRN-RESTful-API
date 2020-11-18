@@ -14,6 +14,7 @@ class XenditController extends Controller
 
         # Request BODY validation
         $validationRules =  [
+            'id' => 'required',
             'external_id' => 'required',
             'status' => 'required',
         ];
@@ -22,6 +23,7 @@ class XenditController extends Controller
             $respMessage = $errors->first();
             return $this->respondWithMissingField($respMessage);
         };
+        $external_id = $request->input('id');
         $invoice = strtoupper($request->input('external_id'));
         $status = strtoupper($request->input('status'));
 
@@ -81,7 +83,7 @@ class XenditController extends Controller
                         ->where([
                             'order_id' => $order->id,
                             'payment_method_id' => 3, //? 3 is Invoice
-                            'status' => 'INQUIRY',
+                            'external_id' => $external_id,
                         ])
                         ->update([
                             'status' => $status,
@@ -124,7 +126,7 @@ class XenditController extends Controller
                         ->where([
                             'id' => $order->id,
                             'payment_method_id' => 3, //? 3 is Invoice
-                            'status' => 'INQUIRY',
+                            'external_id' => $external_id,
                         ])
                         ->update([
                             'status' => $status,
