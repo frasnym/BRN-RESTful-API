@@ -123,14 +123,29 @@ class Controller extends BaseController
         $message = urlencode($message);
 
         try {
-            file_get_contents("https://api.telegram.org/bot$TELEGRAM_BOT_ID:AAFnYpbUBhYB2LKbto5Cg_osgYjlCwv4Jx0/sendMessage?chat_id=$TELEGRAM_CHAT_ID&text=" . $message . "&parse_mode=html");
+            $url = "https://api.telegram.org/bot$TELEGRAM_BOT_ID:AAFnYpbUBhYB2LKbto5Cg_osgYjlCwv4Jx0/sendMessage?chat_id=$TELEGRAM_CHAT_ID&text=" . $message . "&parse_mode=html";
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_exec($ch);
+            curl_close($ch);
         } catch (\Throwable $th) {
             $message = "Full URL: $url";
             $message .= "\n\nHeaders\n" . json_encode($header);
             $message .= "\n\nBody\n" . json_encode($body);
             $message .= "\n\nError Message: Failed Send Error to Telegram";
             $message = urlencode($message);
-            file_get_contents("https://api.telegram.org/bot$TELEGRAM_BOT_ID:AAFnYpbUBhYB2LKbto5Cg_osgYjlCwv4Jx0/sendMessage?chat_id=$TELEGRAM_CHAT_ID&text=" . $message . "&parse_mode=html");
+
+            $url = "https://api.telegram.org/bot$TELEGRAM_BOT_ID:AAFnYpbUBhYB2LKbto5Cg_osgYjlCwv4Jx0/sendMessage?chat_id=$TELEGRAM_CHAT_ID&text=" . $message . "&parse_mode=html";
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_exec($ch);
+            curl_close($ch);
         }
 
         return;
