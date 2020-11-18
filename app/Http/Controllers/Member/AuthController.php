@@ -162,16 +162,16 @@ class AuthController extends Controller
 
             if ($member->get()->count() == 0) {
                 DB::rollback();
-                $respMessage = trans('messages.MemberAccountNotFound');
+                $respMessage = trans('messages.UnableToLogIn');
                 return $this->respondFailedWithMessage($respMessage);
             } else if ($member->get()->count() > 1) {
                 DB::rollback();
-                $respMessage = trans('messages.MemberRegisteredMoreThanOnce');
+                $respMessage = trans('messages.UnableToLogIn');
                 return $this->respondFailedWithMessage($respMessage);
             } else {
                 if (Hash::check($password, $member->value('password')) == false) {
                     DB::rollback();
-                    $respMessage = trans('messages.InvalidAccountPassword');
+                    $respMessage = trans('messages.UnableToLogIn');
                     return $this->respondFailedWithMessage($respMessage);
                 }
             }

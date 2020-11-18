@@ -16,6 +16,7 @@ return [
     'UpdateDataFailed' => 'Perubahan data gagal',
     'ChangeCannotBeDone' => 'Perubahan tidak dapat dilakukan',
     'StatusNotIdentified' => 'Status tidak teridentifikasi',
+    'UnableToLogIn' => 'Proses login gagal',
 
     # Member Registration
     'EmailAddressAlreadyRegistered' => 'Alamat email sudah terdaftar',
