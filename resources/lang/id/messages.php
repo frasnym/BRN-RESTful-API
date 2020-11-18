@@ -55,6 +55,7 @@ return [
     'SalesItemAccountInactive' => 'Data barang penjualan tidak aktif, silahkan kontak admin',
 
     # Order
+    'OrderNotFound' => 'Data pesanan tidak ditemukan',
     'OrderRegisteredMoreThanOnce' => 'Data pesanan tercatat lebih dari sekali',
     'RequestPaymentFailed' => 'Permintaan pembayaran gagal, silahkan kontak admin',
     'PaymentMethodNotDefined' => 'Metode pembayaran belum ditentukan',
@@ -62,4 +63,7 @@ return [
     'OrderRejected' => 'Data pesanan ditolak, silahkan kontak admin',
     'OrderCanceled' => 'Data pesanan sudah dibatalkan',
     'OrderExpired' => 'Data pesanan sudah kedaluwarsa',
+
+    # Xendit
+    'TokenVerificationDidNotMatch' => 'Token verifikasi tidak cocok',
 ];

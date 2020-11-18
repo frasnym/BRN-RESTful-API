@@ -56,6 +56,11 @@ $router->group(['prefix' => 'microservices'], function () use ($router) {
     $router->get('/check_expiry', 'Microservices\DataController@check_expiry');
 });
 
+$router->group(['prefix' => 'vendor'], function () use ($router) {
+    # Xendit Invoice
+    $router->post('/xendit/invoice', 'Vendor\XenditController@invoice');
+});
+
 $router->get('/key', 'ExampleController@generateKey');
 // $router->post('foo', 'ExampleController@generateKey');
 

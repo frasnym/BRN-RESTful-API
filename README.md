@@ -19,9 +19,10 @@ Laravel Lumen is a stunningly fast PHP micro-framework for building web applicat
     <li>Verify Phone Number. Check suitability between phone number and token key</li>
     <li>Change Phone Number. Change phone number if registered number is mistyped</li>
     <li>Payment Method List. Get supported payment method</li>
-    <li>Request Payment using Payment Gateway Xendit. Support: Invoice</li>
+    <li>Request Payment using Payment Gateway <b><a href="https://www.xendit.co/en/">Xendit</a></b>. Support: Invoice</li>
     <li>Registration Request Payment</li>
     <li>Microservices to check any data expired (key, payment)</li>
+    <li>Handle callback from payment gateway</li>
 </ol>
 
 ## Tools Used
@@ -41,11 +42,24 @@ Laravel Lumen is a stunningly fast PHP micro-framework for building web applicat
         <pre><code>composer install</code></pre>
     </li>
     <li>
-        Set <b>.env</b> file. If you don't have it, you can copy from <b>.env.example</b>
+        Set <code>.env</code> file. If you don't have it, you can copy from <code>.env.example</code>
     </li>
     <li>
         Migrate to database
         <br>
         <pre><code>php artisan migrate</code></pre>
+    </li>
+</ol>
+
+### Deploy to cPanel
+<ol>
+    <li>
+        Upload to your directory
+    </li>
+    <li>
+        Rename <code>server.php</code> in your Laravel root folder to <code>index.php</code>
+    </li>
+    <li>
+        Copy the <code>.htaccess</code> file from /public directory to your Laravel root folder.
     </li>
 </ol>
