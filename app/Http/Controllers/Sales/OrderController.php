@@ -319,6 +319,7 @@ class OrderController extends Controller
                                 'Title' => 'RequestPaymentFailed',
                                 'Request' => $xenditRequestPayment['request'],
                                 'Response' => $xenditRequestPayment['response'],
+                                'Complete' => $xenditRequestPayment,
                             ];
                             $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $teleError);
 

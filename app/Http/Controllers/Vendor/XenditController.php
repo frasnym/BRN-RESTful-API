@@ -36,6 +36,7 @@ class XenditController extends Controller
                 $order = DB::table('order')
                     ->where([
                         'invoice' => $invoice,
+                        'status' => 'REQPAYMENT',
                     ]);
 
                 if ($order->get()->count() == 0) {
@@ -67,7 +68,7 @@ class XenditController extends Controller
                         ->update($columnUpdate);
                     if ($affected != 1) {
                         DB::rollback();
-                        $respMessage = trans('messages.UpdateDataFailed1');
+                        $respMessage = trans('messages.UpdateDataFailed');
                         return $this->respondFailedWithMessage($respMessage);
                     }
 
@@ -80,6 +81,7 @@ class XenditController extends Controller
                         ->where([
                             'order_id' => $order->id,
                             'payment_method_id' => 3, //? 3 is Invoice
+                            'status' => 'INQUIRY',
                         ])
                         ->update([
                             'status' => $status,
@@ -88,7 +90,7 @@ class XenditController extends Controller
                         ]);
                     if ($affected != 1) {
                         DB::rollback();
-                        $respMessage = trans('messages.UpdateDataFailed2');
+                        $respMessage = trans('messages.UpdateDataFailed');
                         return $this->respondFailedWithMessage($respMessage);
                     }
 
@@ -122,6 +124,7 @@ class XenditController extends Controller
                         ->where([
                             'id' => $order->id,
                             'payment_method_id' => 3, //? 3 is Invoice
+                            'status' => 'INQUIRY',
                         ])
                         ->update([
                             'status' => $status,

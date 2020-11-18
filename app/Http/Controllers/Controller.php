@@ -22,8 +22,10 @@ class Controller extends BaseController
             'message' => '',
             'expiry_date' => null,
             'payment_code' => null,
+            'request' => null,
+            'response' => null,
         ];
-        if ($payment_method_id == 1) {
+        if ($payment_method_id == 3) {
             # Invoice
             $cURL_url = 'https://api.xendit.co/v2/invoices';
             $cURL_body = [
@@ -59,13 +61,13 @@ class Controller extends BaseController
 
         $output = json_decode($output, true);
 
-        if ($payment_method_id == 1 && isset($output['id'])) {
+        if ($payment_method_id == 3 && isset($output['id'])) {
             $respOutput['success'] = true;
             $respOutput['message'] = trans('messages.cURLProccessSuccess');
             $respOutput['expiry_date'] = date('Y-m-d H:i:s', strtotime($output['expiry_date']));
             $respOutput['payment_code'] = $output['invoice_url'];
         } else {
-            $respOutput['success'] = true;
+            $respOutput['success'] = false;
             $respOutput['message'] = trans('messages.cURLProccessFailed');
         }
 
