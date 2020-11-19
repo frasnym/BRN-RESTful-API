@@ -141,7 +141,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $validationRules =  [
-            'email_or_phone' => 'required',
+            'email_address' => 'required|email',
             'password' => 'required',
         ];
         $errors = $this->staticValidation($request->all(), $validationRules);
@@ -150,15 +150,14 @@ class AuthController extends Controller
             return $this->respondWithMissingField($respMessage);
         }
 
-        $email_or_phone = strtolower($request->input('email_or_phone'));
+        $email_address = strtolower($request->input('email_address'));
         $password = $request->input('password');
 
         DB::beginTransaction();
         try {
             # Select
             $member = DB::table('member')
-                ->where('email_address', $email_or_phone)
-                ->orWhere('phone_number', $email_or_phone);
+                ->where('email_address', $email_address);
 
             if ($member->get()->count() == 0) {
                 DB::rollback();
@@ -176,13 +175,18 @@ class AuthController extends Controller
                 }
             }
 
-            $api_token = Crypt::encrypt(Str::random(40));
+            # Select first member with all column selected
+            $member = $member->first();
+
+            $api_token = Crypt::encrypt($member->id . " " . Str::random(40));
 
             # Update
-            $affected = $member->update([
-                'api_token' => $api_token,
-                'updated_at' => date('Y-m-d H:i:s'),
-            ]);
+            $affected = DB::table('member')
+                ->where('id', $member->id)
+                ->update([
+                    'api_token' => $api_token,
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ]);
             if ($affected != 1) {
                 DB::rollback();
                 $respMessage = trans('messages.UpdateDataFailed');
@@ -190,16 +194,16 @@ class AuthController extends Controller
             } else {
                 DB::commit();
                 $respMessage = trans('messages.ProccessSuccess');
-                $respData = $member->select([
-                    'id',
-                    'full_name',
-                    'position',
-                    'account_status',
-                    'payment_status',
-                    'phone_number_verify_status',
-                    'email_address_verify_status',
-                    'api_token',
-                ])->first();
+                $respData = [
+                    'id' => $member->id,
+                    'full_name' => $member->full_name,
+                    'position' => $member->position,
+                    'account_status' => $member->account_status,
+                    'payment_status' => $member->payment_status,
+                    'phone_number_verify_status' => $member->phone_number_verify_status,
+                    'email_address_verify_status' => $member->email_address_verify_status,
+                    'api_token' => $api_token,
+                ];
                 return $this->respondSuccessWithMessageAndData($respMessage, $respData);
             }
         } catch (\Exception $e) {

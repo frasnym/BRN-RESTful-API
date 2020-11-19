@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Member;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Crypt;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -39,8 +40,16 @@ class AuthServiceProvider extends ServiceProvider
                 $idToken = $request->header('Authorization'); // ? api_token on header
                 $idToken = explode(' ', $idToken);
 
-                if (count($idToken) == 3) {
-                    $member = Member::where(['id' => $idToken[1], 'api_token' => $idToken[2]])->first();
+                if (count($idToken) == 2) {
+                    # $idToken[0] = Bearer
+                    # $idToken[1] = api_token = encrypt([member_id][space][api_token])
+                    $api_token = $idToken[1];
+
+                    $idToken[1] = Crypt::decrypt($idToken[1]);
+                    $idToken[1] = explode(' ', $idToken[1]);
+                    $member_id = $idToken[1][0];
+
+                    $member = Member::where(['id' => $member_id, 'api_token' => $api_token])->first();
                     if ($member) {
                         # Save member data on "request object"
                         return $request->member = $member;
