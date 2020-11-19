@@ -40,7 +40,12 @@ class AuthServiceProvider extends ServiceProvider
                 $idToken = explode(' ', $idToken);
 
                 if (count($idToken) == 3) {
-                    return Member::where(['id' => $idToken[1], 'api_token' => $idToken[2]])->first();
+                    $member = Member::where(['id' => $idToken[1], 'api_token' => $idToken[2]])->first();
+                    if ($member) {
+                        # Save member data on "request object"
+                        return $request->member = $member;
+                    }
+                    // return Member::where(['id' => $idToken[1], 'api_token' => $idToken[2]])->first();
                 }
             }
         });

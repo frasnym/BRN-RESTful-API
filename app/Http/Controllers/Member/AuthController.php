@@ -213,38 +213,36 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $idToken = $request->header('Authorization');
-        $idToken = explode(' ', $idToken);
+        # Selected member data from AuthMiddleware
+        $member = $request->member;
 
-        if (count($idToken) == 3) {
-            DB::beginTransaction();
-            try {
-                # Update
-                $affected = DB::table('member')
-                    ->where([
-                        'id' => $idToken[1],
-                        'api_token' => $idToken[2],
-                    ])
-                    ->update([
-                        'api_token' => null,
-                        'updated_at' => date('Y-m-d H:i:s'),
-                    ]);
-                if ($affected != 1) {
-                    DB::rollback();
-                    $respMessage = trans('messages.UpdateDataFailed');
-                    return $this->respondFailedWithMessage($respMessage);
-                } else {
-                    DB::rollback();
-                    $respMessage = trans('messages.ProccessSuccess');
-                    return $this->respondSuccessWithMessageAndData($respMessage);
-                }
-            } catch (\Exception $e) {
-                $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e->getMessage());
-
+        DB::beginTransaction();
+        try {
+            # Update
+            $affected = DB::table('member')
+                ->where([
+                    'id' => $member->id,
+                    'api_token' => $member->api_token,
+                ])
+                ->update([
+                    'api_token' => null,
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+            if ($affected != 1) {
                 DB::rollback();
-                $respMessage = trans('messages.ChangeCannotBeDone');
+                $respMessage = trans('messages.UpdateDataFailed');
                 return $this->respondFailedWithMessage($respMessage);
+            } else {
+                DB::commit();
+                $respMessage = trans('messages.ProccessSuccess');
+                return $this->respondSuccessWithMessageAndData($respMessage);
             }
+        } catch (\Exception $e) {
+            $this->sendApiErrorToTelegram($request->fullUrl(), $request->header(), $request->all(), $e->getMessage());
+
+            DB::rollback();
+            $respMessage = trans('messages.ChangeCannotBeDone');
+            return $this->respondFailedWithMessage($respMessage);
         }
 
         $respMessage = trans('messages.Error');

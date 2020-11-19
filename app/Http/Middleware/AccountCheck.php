@@ -21,7 +21,9 @@ class AccountCheck
             $idToken = explode(' ', $idToken);
 
             if (count($idToken) == 3) {
-                $member = Member::where(['id' => $idToken[1], 'api_token' => $idToken[2]])->first();
+                # Catch member object, selected from AuthMiddleware
+                $member = $request->member;
+                // $member = Member::where(['id' => $idToken[1], 'api_token' => $idToken[2]])->first();
 
                 if ($member->account_status != 'ACTIVE') {
                     $response = [
